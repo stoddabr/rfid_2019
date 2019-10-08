@@ -4,52 +4,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats as st
 
-pd.options.mode.chained_assignment = None  # default='warn'
+import trial_info_obj as info 
+pd.options.mode.chained_assignment = None    # default='warn'
 
 
-list_of_file_obj = [
-  {
-    'file': 'a_b.txt',
-    'lid': True,
-    'base': 'bin',
-    'distance': 'close'
-  },
-  {
-    'file': 'a_f.txt',
-    'lid': True,
-    'base': 'foam',
-    'distance':'close'
-  },
-  {
-    'file': 'a_b2.txt',
-    'lid': True,
-    'base': 'bin',
-    'distance': 'close'
-  },
-  {
-    'file': 'a_b_far.txt',
-    'lid': True,
-    'base': 'bin',
-    'distance': 'far'
-  },
-  {
-    'file': 'a_b_lid.txt',
-    'lid': False,
-    'base': 'bin',
-    'distance': 'far'
-  },
-  {
-    'file': 'a_f_lid.txt',
-    'lid': False,
-    'base': 'foam',
-    'distance': 'far'
-  }
-]
 
 # from https://stackoverflow.com/questions/15033511/compute-a-confidence-interval-from-sample-data
 def c_i_95(series):
-  a = series.values
-  return st.norm.interval(0.8, loc=np.mean(a), scale=np.std(a)/np.sqrt(series.size) ) #
+    a = series.values
+    return st.norm.interval(0.95, loc=np.mean(a), scale=np.std(a)/np.sqrt(series.size) ) #
 
 df = []
 df_filtered = []
@@ -82,63 +45,63 @@ colors = ['b','g','r','c','m','y','k','0.5','orchid','darkseagreen','teal','oran
 fig = plt.figure()
 ax1 = fig.add_subplot(111)
 df = pd.read_csv(
-  'data/'+'a_b_far.txt', 
-  error_bad_lines=False, 
-  header=None,
-  names=['val','rssi','freq','id']
-).dropna()
-for f in list_of_file_obj:
-  df = pd.read_csv(
-    'data/'+f['file'], 
+    'data/'+'a_b_far.txt', 
     error_bad_lines=False, 
     header=None,
     names=['val','rssi','freq','id']
-  ).dropna()
+).dropna()
+for f in info.list_of_file_obj:
+    df = pd.read_csv(
+        'data/'+f['file'], 
+        error_bad_lines=False, 
+        header=None,
+        names=['val','rssi','freq','id']
+    ).dropna()
 
-  # frequency limits taken from datasheet, supported US region frequency 
-  df_filtered = df[
-    ( 917000 < df.freq) & (df.freq < 927200 ) 
-  ]
+    # frequency limits taken from datasheet, supported US region frequency 
+    df_filtered = df[
+        ( 917000 < df.freq) & (df.freq < 927200 ) 
+    ]
 
-  df_filtered['val'] = pd.to_numeric(df_filtered.val)
-  df_filtered['rssi'] = pd.to_numeric(df_filtered.rssi)
-  df_filtered['id'] = pd.to_numeric(df_filtered.id)
+    df_filtered['val'] = pd.to_numeric(df_filtered.val)
+    df_filtered['rssi'] = pd.to_numeric(df_filtered.rssi)
+    df_filtered['id'] = pd.to_numeric(df_filtered.id)
 
-  try:
-    ax1.scatter(
-      df_filtered.val, df_filtered.rssi,
-      c=colors[color_int], label=f, alpha=0.1
-    )
-    color_int += 1
-  except:
-    print('scatter plot faled: ',f)
+    try:
+        ax1.scatter(
+            df_filtered.val, df_filtered.rssi,
+            c=colors[color_int], label=f, alpha=0.1
+        )
+        color_int += 1
+    except:
+        print('scatter plot faled: ',f)
 
-  if f['lid']:
-    lid_count = lid_count + df_filtered['val'].size
-    lid_total = lid_total + df_filtered['val'].sum()
-    lid_ser = lid_ser.append(df_filtered['val'])
-  else:
-    nolid_count = lid_count + df_filtered['val'].size
-    nolid_total = lid_total + df_filtered['val'].sum()  
-    nolid_ser = nolid_ser.append(df_filtered['val'])
+    if f['lid']:
+        lid_count = lid_count + df_filtered['val'].size
+        lid_total = lid_total + df_filtered['val'].sum()
+        lid_ser = lid_ser.append(df_filtered['val'])
+    else:
+        nolid_count = lid_count + df_filtered['val'].size
+        nolid_total = lid_total + df_filtered['val'].sum()    
+        nolid_ser = nolid_ser.append(df_filtered['val'])
 
-  if f['base'] == 'bin':
-    base_count = base_count + df_filtered['val'].size
-    base_total = base_total + df_filtered['val'].sum()
-    base_ser = base_ser.append(df_filtered['val'])
-  else:
-    nobase_count = base_count + df_filtered['val'].size
-    nobase_total = base_total + df_filtered['val'].sum()  
-    nobase_ser = nobase_ser.append(df_filtered['val'])
+    if f['base'] == 'bin':
+        base_count = base_count + df_filtered['val'].size
+        base_total = base_total + df_filtered['val'].sum()
+        base_ser = base_ser.append(df_filtered['val'])
+    else:
+        nobase_count = base_count + df_filtered['val'].size
+        nobase_total = base_total + df_filtered['val'].sum()    
+        nobase_ser = nobase_ser.append(df_filtered['val'])
 
-  if f['distance'] == 'far':
-    far_count = far_count + df_filtered['val'].size
-    far_total = far_total + df_filtered['val'].sum()
-    far_ser = far_ser.append(df_filtered['val'])
-  else:
-    close_count = base_count + df_filtered['val'].size
-    close_total = base_total + df_filtered['val'].sum()  
-    close_ser = close_ser.append(df_filtered['val'])
+    if f['distance'] == 'far':
+        far_count = far_count + df_filtered['val'].size
+        far_total = far_total + df_filtered['val'].sum()
+        far_ser = far_ser.append(df_filtered['val'])
+    else:
+        close_count = base_count + df_filtered['val'].size
+        close_total = base_total + df_filtered['val'].sum()    
+        close_ser = close_ser.append(df_filtered['val'])
 
 print('ave lid', lid_total/lid_count, c_i_95(lid_ser) )
 print('ave no lid', nolid_total/nolid_count, c_i_95(nolid_ser) )
